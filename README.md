@@ -1,6 +1,6 @@
 # “ガチャ“はなぜ当たらないのか？
 
-## 1 はじめに
+## 1 [はじめに](01_preface/README.md)
 
 ## 2 [リボ払いの恐怖](02_revolving/README.md)
 
