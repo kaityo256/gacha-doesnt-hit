@@ -43,10 +43,16 @@ def calc_bit():
 
 if __name__ == '__main__':
   n = 10000
-  total = 0
+  hist = []
   for i in range(n):
     # total += calc_num() # 5.69
     # total += calc_any() # 14.619
     # total += calc_np() # 9.156
-    total += calc_bit() # 1.217
-  print(total/n)
+    r= calc_bit() # 1.217
+    hist.append(r)
+
+with open("hist.dat", "w") as f:
+  for i,h in enumerate(sorted(hist)):
+      f.write(f"{h} {float(i)/len(hist)}\n")
+
+print(f"mean: {np.mean(hist)}") # 192.6567
