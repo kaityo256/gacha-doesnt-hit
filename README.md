@@ -2,21 +2,13 @@
 
 ## 1 [はじめに](01_preface/README.md)
 
-## 2 [リボ払いの恐怖](02_revolving/README.md)
+## 2 [リボ払いの恐怖　～簡単なルールと予測不可能な結果～](02_revolving/README.md)
 
-数値シミュレーションの導入。単純なルールから予想できない結果になることの説明。
+## 3 [直感はなぜ外れる？　～確率の不思議～](03_montyhall/README.md)
 
-## 3 [直感はなぜ外れる？](03_montyhall/README.md)
+## 4 [ガチャの沼へようこそ　～当たりそうで当たらない確率の罠～](04_gacha/README.md)
 
-モンティ・ホール問題の紹介。
-
-## 4 [ガチャの沼へようこそ](04_gacha/README.md)
-
-絵合わせガチャについての話題。
-
-## 5 [風邪はなぜ流行る？](05_percolation/README.md)
-
-パーコレーションの話題。
+## 5 [風邪はなぜ流行る？　～相転移の不思議～](05_percolation/README.md)
 
 ## 6 [アイスが売れると事故が増える？](06_correlation/README.md)
 
