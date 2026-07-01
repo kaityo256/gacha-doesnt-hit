@@ -12,7 +12,6 @@
 
 ## 6 [アイスが売れると事故が増える？](06_correlation/README.md)
 
-疑似相関の話。
 
 ## [おわりに](07_postface/README.md)
 
