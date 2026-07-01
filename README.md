@@ -10,11 +10,8 @@
 
 ## 5 [風邪はなぜ流行る？　～相転移の不思議～](05_percolation/README.md)
 
-## 6 [アイスが売れると事故が増える？](06_correlation/README.md)
+## [おわりに](06_postface/README.md)
 
-
-## [おわりに](07_postface/README.md)
-
-## [学問との出会い](08_origin/README.md)
+## [学問との出会い](07_origin/README.md)
 
 ## ブックガイド
