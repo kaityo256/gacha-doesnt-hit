@@ -5,7 +5,7 @@ def main() -> None:
     total = 0
 
     # カレントディレクトリ直下の */*.md を対象にする
-    for path in Path(".").glob("*/*.md"):
+    for path in Path(".").glob("*/README.md"):
         text = path.read_text(encoding="utf-8")
         total += len(text)
 
