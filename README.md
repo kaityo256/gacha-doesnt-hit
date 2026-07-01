@@ -2,7 +2,7 @@
 
 ## 1 [はじめに](01_preface/README.md)
 
-## 2 [リボ払いの恐怖　～簡単なルールと予測不可能な結果～](02_revolving/README.md)
+## 2 [リボ払いの恐怖　～簡単なルールが生み出す予測不可能な結果～](02_revolving/README.md)
 
 ## 3 [直感はなぜ外れる？　～確率の不思議～](03_montyhall/README.md)
 
@@ -10,8 +10,10 @@
 
 ## 5 [風邪はなぜ流行る？　～相転移の不思議～](05_percolation/README.md)
 
-## [おわりに](06_postface/README.md)
+## 6 [渋滞はなぜ起きる？　～社会のシミュレーション～](06_social/README.md)
 
-## [学問との出会い](07_origin/README.md)
+## [おわりに](07_postface/README.md)
+
+## [学問との出会い](08_origin/README.md)
 
 ## ブックガイド
