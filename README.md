@@ -16,4 +16,5 @@
 
 ## [学問との出会い](08_origin/README.md)
 
-## ブックガイド
+## [ブックガイド](books/README.md)
+
