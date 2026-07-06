@@ -43,13 +43,92 @@ $$
 
 アメリカのとある研究所では、付近にバーが2軒しかありませんでした。どちらも研究所から結構遠くにあり、仕事終わりに研究者はどちらかのバーに行きます。静かに飲みたいので、混んでいる方に行きたくありません。しかし、どちらが混んでいるかは行ってみないとわかりません。研究者たちは、仕事終わりにどちらのバーに行くか決めます。そして、行った先が空いていたら「勝ち」、混んでいたら「負け」としましょう。これは、少数派(マイノリティ)に入れば勝ちとなるゲームなので、マイノリティ・ゲームと呼ばれています。
 
-これをモデル化しましょう。研究者達をモデル化した仮想的な人のことを**エージェント**と呼びます。各エージェントは、毎回「A」か「B」のどちらかを選択します。選択した結果を集計し、
+このゲームをモデル化しましょう。このゲームの参加者をプレイヤーと呼ぶことにします。各プレイヤーは、他のプレイヤーにわからないように毎回「A」か「B」のどちらかの札を選択します。全員が選択を終えたら集計し、AとBの札の少なかった方を選んだプレイヤーに、それぞれ1点が入ります。これを1ターンとして、ターンを十分繰り返すことにします。プレイヤーに開示されるのは、毎ターン「どちらの札がマイノリティであったか」だけです。そこで、プレイヤーはこれまでの「マイノリティであった札の履歴」から、次にどちらを選べばマイノリティ側になれるかを予想して、札を選ぶことになります。
+
+さて、プレイヤーは「A, B, A, A, A」のような履歴を見て、次に自分がどちらを選ぶか決めなくてはいけません。
 
 
+以下がそのコードです。
+
+```py
+import numpy as np
+import matplotlib.pyplot as plt
+
+def history_to_index(history):
+    index = 0
+    for bit in history:
+        index = 2 * index + bit
+    return index
+
+def choose_strategies(strategy_scores, N):
+    chosen = []
+    for i in range(N):
+        max_score = np.max(strategy_scores[i])
+        candidates = np.where(strategy_scores[i] == max_score)[0]
+        chosen.append(np.random.choice(candidates))
+    return chosen
+
+def run_minority_game(N, T, L, S):
+    history_length=L
+    num_strategies_per_player=S
+    num_histories = 2 ** history_length
+    strategies = np.random.randint(0, 2,size=(N, num_strategies_per_player, num_histories))
+    strategy_scores = np.zeros((N, num_strategies_per_player),dtype=int)
+    history = list(np.random.randint(0, 2, size=history_length))
+    total_score_per_turn = []
+    for t in range(T):
+        h_index = history_to_index(history)
+        chosen_strategies = choose_strategies(strategy_scores, N)
+        choices = np.empty(N, dtype=int)
+        for i in range(N):
+            s = chosen_strategies[i]
+            choices[i] = strategies[i, s, h_index]
+
+        num_A = np.sum(choices == 0)
+        num_B = np.sum(choices == 1)
+        if num_A < num_B:
+            minority_choice = 0
+        else:
+            minority_choice = 1
+        winners = choices == minority_choice
+        total_score_per_turn.append(np.sum(winners))
+        for i in range(N):
+            for s in range(num_strategies_per_player):
+                prediction = strategies[i, s, h_index]
+                if prediction == minority_choice:
+                    strategy_scores[i, s] += 1
+
+        history.pop(0)
+        history.append(minority_choice)
+    return total_score_per_turn
+
+
+np.random.seed(1)
+N = 101 # プレイヤー数
+T = 100 # 総ターン数
+L = 5   # 履歴をどれくらい見るか
+S = 2   # プレイヤーに配る戦略数 
+total_score_per_turn = run_minority_game(N, T, L, S)
+# 時間発展をプロット
+plt.figure(figsize=(10, 5))
+plt.plot(total_score_per_turn)
+plt.ylim(bottom=0)
+plt.xlabel("Turn")
+plt.ylabel("Total score gained in this turn")
+plt.title("Total number of winners per turn")
+plt.show()
+```
+
+実際に、101人、履歴を5つまで参照し、戦略表を各プレイヤーに2枚ずつ配った場合の結果を以下に示します。
+
+![マイノリティ・ゲームの実行結果](fig/minority_game_result.png)
+
+各ターンで、プレイヤーが得た得点の合計、つまり「マイノリティ」を選んだプレイヤーの数が表示されています。これを見ると、得点は揺らいでいるものの、概ね50点に近い値になっていることがわかります。これは、多くのターンにおいてプレイヤーがほぼ半々に分かれたことを意味しています。マイノリティ・ゲームは、「マイノリティ」に入った人だけが得点をもらえます。ここで、マイノリティが何人であろうと、マイノリティに入った人の得る得点は変わりません。例えばAを選んだ人が1人で、Bを100人が選んだとすると、バーAはガラガラです。一方、Aを選んだ人が50人、Bを選んだ人が51人だとすると、AもBもたいして状況が変わりません。それでもAを選んだ50人全員に得点がもらえます。マイノリティ・ゲームの参加者が101人の場合、得点を貰える、つまりマイノリティになれるのは最大50人です。各プレイヤーは他のプレイヤーと情報を交換しておらず、自分に配られた戦略表の過去の成績だけを元に、自分の利益を最大化するように行動しています。にも関わらず、50人に近い人が「マイノリティ」に入っているのを見ると、「なるべく多くの人が得点を取れるように行動しましょう」という紳士協定のようなものが結ばれているかのようです。
+
+このように、個々のプレイヤーが自分の利益だけを考えて行動しているにも関わらず、全体としては多くのプレイヤーが得点を得られる状態が実現することがあります。このような振る舞いを**協調現象**と呼びます。マイノリティ・ゲームでは、個々のプレイヤーが単純な規則に従って利己的に行動しているだけでも、集団全体としては効率のよい状態が生まれることがあります。この点が、マイノリティ・ゲームが市場や交通、資源配分などのモデルとして興味深い理由です。各参加者が局所的な情報のみを参照しているにも関わらず、適応の結果としてあたかも全体が調整されているかのような振る舞いが現れることがあります。マイノリティ・ゲームは、市場などにおける人々の競争的な意思決定を、非常に単純化して表したモデルの一つです。
 
 ## まとめ
 
-渋滞を引き起こすモデルとして最適速度モデルを、人が混雑を避ける振る舞いを表すモデルとしてマイノリティ・ゲームを紹介しました。重要なのはモデリングです。
+渋滞を引き起こすモデルとして最適速度モデルを、人が混雑を避ける振る舞いを表すモデルとしてマイノリティ・ゲームを紹介しました。渋滞は身近な現象でありながら、多数の要素が相互作用する複雑な現象でもあります。円形のサーキットで自然に渋滞が発生するという実験は、渋滞が道路構造だけでなく、車の密度と相互作用そのものから生まれることを示しています。渋滞を相転移と捉えることで、私たちは日常的な交通現象を、物理学の考え方を使って理解することができます。マイノリティ・ゲームでは、簡単なゲームのプレイヤーの行動をモデル化することで、利己的に行動するプレイヤーが全体として協調しているかのような振る舞いが見られることがわかります。渋滞や市場など、人間の意思決定が関わるような複雑な現象でも、適切にモデル化することでその背後にある基本的な仕組みを調べることができます。
 
-渋滞は身近な現象でありながら、多数の要素が相互作用する複雑な現象でもあります。円形のサーキットで自然に渋滞が発生するという実験は、渋滞が道路構造だけでなく、車の密度と相互作用そのものから生まれることを示しています。渋滞を相転移と捉えることで、私たちは日常的な交通現象を、物理学の考え方を使って理解することができます。
-
+数値シミュレーションでは、モデルを作り、計算し、その結果を観察し、現実の現象や理論と比較します。そして、必要に応じてモデルを修正し、再び計算します。この過程を通じて、私たちは複雑な現象の中にある規則性や、集団として現れる新しい性質を発見することができます。渋滞や市場のように一見すると予測が難しい現象であっても、適切なモデル化によって、その発生条件や典型的な振る舞いを理解する手がかりを得ることができるのです。
