@@ -35,7 +35,47 @@
 
 しかし、もう少し借りると様子が変わってきます。例えば70万円借りると168回払いで総額167万3673円と2倍以上に、79万円借りると353回払いで支払総額352万4484円と4倍以上に、そして80万円借りると、いくら支払っても借金残高は減らなくなり、一生お金を返し続けることになります。
 
-TODO: グラフ挿入
+この返済シミュレーションをコードにすると以下のようになります。
+
+```py
+import numpy as np
+import matplotlib.pyplot as plt
+
+def simulate_revolving_payments(balance, annual_interest_rate, monthly_payment):
+    monthly_interest_rate = annual_interest_rate / 12.0
+    month = 0
+    total = 0
+    months = []
+    interest_payments = []
+    principal_payments = []
+    while balance > 0:
+        month = month + 1
+        interest = int(balance * monthly_interest_rate)
+        pay = monthly_payment - interest
+        if balance < pay:
+            pay = balance
+        total += pay
+        total += interest
+        balance -= pay
+        months.append(month)
+        interest_payments.append(interest)
+        principal_payments.append(pay)
+    return months, interest_payments, principal_payments
+
+initial_balance = 790000 # 借入額
+annual_interest_rate = 0.15
+monthly_payment = 10000
+months, interest_payments, principal_payments = simulate_revolving_payments(initial_balance, annual_interest_rate, monthly_payment)
+plt.bar(months, interest_payments)
+plt.bar(months, principal_payments,bottom=interest_payments)
+plt.xlabel("Month")
+plt.ylabel("Payment amount")
+plt.show()
+```
+
+![リボ払い](fig/revolving.png)
+
+図：10万円借りた場合と79万円借りた場合の返済シミュレーション。(a) 10万円借りた場合。(b) 79万円借りた場合。借入額が小さい場合は、毎月の支払いがほとんど元本返済に使われるが、借入額が大きくなると金利手数料の割合が大きくなる。
 
 一体なにが起きたのでしょうか？　金利が年率15%、それを12か月で均等に割ると、毎月の金利手数料は借金残高の1.25%となります。80万円借りると、毎月の金利手数料は80万円の1.25%、すなわち1万円ぴったりになります。毎月の返済1万円は全て金利手数料となるため、借金の返済にあてられません。こうして、「毎月金利手数料を支払っているのに全く借金残高が減らない。でも毎月1万円なので気づかずに支払い続ける」という怖い状態が出来上がります。
 
@@ -182,7 +222,7 @@ plot(1.0, 3.0)
 
 ![1<a<3の場合](fig/logistic_13.png)
 
-図2：$1<a<3$の場合
+図2：$1<a<3$ の場合
 TODO: 軸などを修正。理論値も追加。
 
 $1<a<3$ の範囲では、それぞれの $a$ に対して、最後の100世代の点がほとんど1つの値に重なっています。これは、世代を重ねると個体数が一定の値に落ち着くことを意味します。
@@ -199,7 +239,7 @@ $$
 
 ![3<a<4の場合](fig/logistic_34.png)
 
-図3：$3<a<4$の場合
+図3：$3<a<4$ の場合
 TODO: 軸などを修正。理論値も追加。
 
 今度は、急に不思議な図が現れました。
