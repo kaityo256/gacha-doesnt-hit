@@ -35,44 +35,6 @@
 
 しかし、もう少し借りると様子が変わってきます。例えば70万円借りると168回払いで総額167万3673円と2倍以上に、79万円借りると353回払いで支払総額352万4484円と4倍以上に、そして80万円借りると、いくら支払っても借金残高は減らなくなり、一生お金を返し続けることになります。
 
-この返済シミュレーションをコードにすると以下のようになります。
-
-```py
-import numpy as np
-import matplotlib.pyplot as plt
-
-def simulate_revolving_payments(balance, annual_interest_rate, monthly_payment):
-    monthly_interest_rate = annual_interest_rate / 12.0
-    month = 0
-    total = 0
-    months = []
-    interest_payments = []
-    principal_payments = []
-    while balance > 0:
-        month = month + 1
-        interest = int(balance * monthly_interest_rate)
-        pay = monthly_payment - interest
-        if balance < pay:
-            pay = balance
-        total += pay
-        total += interest
-        balance -= pay
-        months.append(month)
-        interest_payments.append(interest)
-        principal_payments.append(pay)
-    return months, interest_payments, principal_payments
-
-initial_balance = 790000 # 借入額
-annual_interest_rate = 0.15
-monthly_payment = 10000
-months, interest_payments, principal_payments = simulate_revolving_payments(initial_balance, annual_interest_rate, monthly_payment)
-plt.bar(months, interest_payments)
-plt.bar(months, principal_payments,bottom=interest_payments)
-plt.xlabel("Month")
-plt.ylabel("Payment amount")
-plt.show()
-```
-
 ![リボ払い](fig/revolving.png)
 
 図：10万円借りた場合と79万円借りた場合の返済シミュレーション。(a) 10万円借りた場合。(b) 79万円借りた場合。借入額が小さい場合は、毎月の支払いがほとんど元本返済に使われるが、借入額が大きくなると金利手数料の割合が大きくなる。
@@ -191,36 +153,6 @@ $$
 この式を見ると、栄養価を表すパラメータ$a$が大きいほど、個体数割合$n$は1に近づくことがわかります。つまり、栄養価が高いほど、個体数は上限に近い値で落ち着くと考えられます。一方、$a$が1に近づくと、$1-1/a$は$0$に近づきます。特に $a=1$ のとき、この値は0になるため、バクテリアは全滅すると考えられます。
 
 ただし、ここで注意したいのは、この計算で求めた値はあくまで「定常状態の候補」だということです。実際に世代を重ねたときにその値に落ち着くかどうかは、成長パラメータ$a$の値によって変わります。そこで、シミュレーションで確かめてみましょう。初期値を$n=0.1$として、さまざまな$a$の値について1000世代分の計算を行い、最後の100世代の値をプロットしています。最初の方の値を捨てているのは、十分に時間が経った後に個体数がどのような振る舞いをするかを見るためです。
-
-```py
-import matplotlib.pyplot as plt
-import numpy as np
-
-def logistic_plot(start, end, x, y):
-  for i in range(1000):
-    r = (end - start) * i / 1000 + start
-    n = 0.1
-    for j in range(1000):
-      n = r * n * (1.0 - n)
-      if j > 900:
-        x.append(r)
-        y.append(n)
-
-def plot(start, end):
-  x, y = [], []
-  logistic_plot(start, end, x, y)
-  x = np.array(x)
-  t = 1-1.0/x
-  plt.xlabel("Population")
-  plt.xlabel("Growth parameter a")
-  plt.scatter(x, y, s = 1, label="Simulated data")
-  plt.plot(x, t, color = "black", label="Predicted curve")
-  plt.legend()
-
-plot(1.0, 3.0)
-```
-
-図1：バクテリアの定常状態を調べるシミュレーションコード
 
 シミュレーションした結果は以下の図のようになります。
 
