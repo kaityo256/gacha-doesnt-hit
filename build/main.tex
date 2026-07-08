@@ -1,0 +1,36 @@
+% main.tex
+\documentclass[
+  book,
+  paper={127mm,188mm},
+  fontsize=9pt,
+  jafontsize=9pt,
+  line_length=30zw,
+  number_of_lines=25,
+  baselineskip=14pt,
+  head_space=18mm,
+  foot_space=18mm,
+  gutter=18mm,
+  fore-edge=14mm,
+]{jlreq}
+
+\usepackage{luatexja-fontspec}
+\setmainjfont{HaranoAjiMincho}
+
+\title{“ガチャ”はなぜ当たらないのか？}
+\author{渡辺宙志}
+
+\pagestyle{plain}
+
+\begin{document}
+
+\frontmatter
+
+\maketitle
+
+\tableofcontents
+
+\mainmatter
+
+\include{01_preface}
+
+\end{document}
