@@ -26,64 +26,7 @@ $$
 
 これは、連立微分方程式と呼ばれる方程式です。左辺の$d v_i/dt$は、車$i$の速度の変化分で、アクセルを踏めば正、ブレーキを踏めば負になります。アクセルを踏むべきかブレーキを踏むべきかは、現在の車間距離から決まる最適速度$V(\Delta x_i)$と、現在の速度$v_i$の差で決まります。現在の速度が最適速度よりも遅ければ右辺は正、つまりアクセルを踏むことになります。逆ならブレーキです。比例係数$a$は、「どれくらい強くアクセルもしくはブレーキを踏むか」というパラメータで、ドライバーの反射神経を表しています。車の振る舞いをこの式で表すモデルを**最適速度モデル**と呼びます。
 
-このモデルに従う車を円形のサーキットにたくさん配置してから動かして、しばらく放っておきましょう。シミュレーションコードは以下のようになります。
-
-```py
-from math import tanh
-from matplotlib import pyplot as plt
-import numpy as np
-
-def V(dx):
-    return tanh(dx -2.0) + tanh(2.0)
-
-def init(L, number_of_cars, car_positions, car_velocities):
-    dx = L / number_of_cars
-    x = 0.0
-    iv = V(dx)
-    for i in range(number_of_cars):
-        car_positions[i] = x
-        car_velocities[i] = iv
-        x += dx
-        x += np.random.uniform(-0.5, 0.5)
-
-def step(L, number_of_cars, car_positions, car_velocities, a, dt):
-    for i in range(number_of_cars):
-        dx = car_positions[(i + 1) % number_of_cars] - car_positions[i]
-        if (dx < 0.0):
-            dx += L
-        car_velocities[i] += a * (V(dx) - car_velocities[i])*dt
-        car_positions[i] += car_velocities[i]*dt
-        if (car_positions[i] > L):
-            car_positions[i] -= L
-
-def run(a):
-    T = 50000
-    L = 40
-    number_of_cars = 20
-    dt = 0.002
-    car_positions = np.zeros(number_of_cars)
-    car_velocities = np.zeros(number_of_cars)
-    init(L, number_of_cars, car_positions, car_velocities)
-    history = []
-    times = []
-    data_x = []
-    data_y = []
-    for i in range(T):
-        step(L, number_of_cars, car_positions, car_velocities, a, dt)
-        if (i%100==0):
-            data_x += car_positions.tolist()
-            data_y += [i*dt]*number_of_cars
-    plt.xlabel("position")
-    plt.ylabel("time")
-    plt.scatter(data_x, data_y, s=1.0, alpha=0.5,color="black")
-    plt.show()
-
-a = 1.0 # 反射神経パラメータ (a=1.0で渋滞相、a=3.0で自由流相)
-np.random.seed(1)
-run(a)
-```
-
-このコードが出力するのは、全ての車の位置を時間に対してプロットしたもので、**時空図**と呼ばれています。以下の図は、反射神経パラメータ$a$を変えてシミュレーションした結果です。
+このモデルに従う車を円形のサーキットにたくさん配置してから動かして、しばらく放っておきましょう。そして、各時刻において、全ての車がどこにいるかをプロットしましょう。このような図を**時空図**と呼びます。反射神経パラメータを変えてシミュレーションしてみましょう。
 
 ![最適速度模型の振る舞い](fig/ovmodel_results.png)
 
@@ -108,81 +51,7 @@ run(a)
 
 このゲームをモデル化しましょう。このゲームの参加者をプレイヤーと呼ぶことにします。各プレイヤーは、他のプレイヤーにわからないように毎回「A」か「B」のどちらかの札を選択します。全員が選択を終えたら集計し、AとBの札の少なかった方を選んだプレイヤーに、それぞれ1点が入ります。これを1ターンとして、ターンを十分繰り返すことにします。プレイヤーに開示されるのは、毎ターン「どちらの札がマイノリティであったか」だけです。そこで、プレイヤーはこれまでの「マイノリティであった札の履歴」から、次にどちらを選べばマイノリティ側になれるかを予想して、札を選ぶことになります。
 
-さて、プレイヤーは「A, B, A, A, A」のような履歴を見て、次に自分がどちらを選ぶか決めなくてはいけません。
-
-
-以下がそのコードです。
-
-```py
-import numpy as np
-import matplotlib.pyplot as plt
-
-def history_to_index(history):
-    index = 0
-    for bit in history:
-        index = 2 * index + bit
-    return index
-
-def choose_strategies(strategy_scores, N):
-    chosen = []
-    for i in range(N):
-        max_score = np.max(strategy_scores[i])
-        candidates = np.where(strategy_scores[i] == max_score)[0]
-        chosen.append(np.random.choice(candidates))
-    return chosen
-
-def run_minority_game(N, T, L, S):
-    history_length=L
-    num_strategies_per_player=S
-    num_histories = 2 ** history_length
-    strategies = np.random.randint(0, 2,size=(N, num_strategies_per_player, num_histories))
-    strategy_scores = np.zeros((N, num_strategies_per_player),dtype=int)
-    history = list(np.random.randint(0, 2, size=history_length))
-    total_score_per_turn = []
-    for t in range(T):
-        h_index = history_to_index(history)
-        chosen_strategies = choose_strategies(strategy_scores, N)
-        choices = np.empty(N, dtype=int)
-        for i in range(N):
-            s = chosen_strategies[i]
-            choices[i] = strategies[i, s, h_index]
-
-        num_A = np.sum(choices == 0)
-        num_B = np.sum(choices == 1)
-        if num_A < num_B:
-            minority_choice = 0
-        else:
-            minority_choice = 1
-        winners = choices == minority_choice
-        total_score_per_turn.append(np.sum(winners))
-        for i in range(N):
-            for s in range(num_strategies_per_player):
-                prediction = strategies[i, s, h_index]
-                if prediction == minority_choice:
-                    strategy_scores[i, s] += 1
-
-        history.pop(0)
-        history.append(minority_choice)
-    return total_score_per_turn
-
-
-np.random.seed(1)
-N = 101 # プレイヤー数
-T = 100 # 総ターン数
-L = 5   # 履歴をどれくらい見るか
-S = 2   # プレイヤーに配る戦略数 
-total_score_per_turn = run_minority_game(N, T, L, S)
-# 時間発展をプロット
-plt.figure(figsize=(10, 5))
-plt.plot(total_score_per_turn)
-plt.ylim(bottom=0)
-plt.xlabel("Turn")
-plt.ylabel("Total score gained in this turn")
-plt.title("Total number of winners per turn")
-plt.show()
-```
-
-実際に、101人、履歴を5つまで参照し、戦略表を各プレイヤーに2枚ずつ配った場合の結果を以下に示します。
+さて、プレイヤーは「A, B, A, A, A」のような履歴を見て、次に自分がどちらを選ぶか決めなくてはいけません。実際に、101人、履歴を5つまで参照し、戦略表を各プレイヤーに2枚ずつ配った場合の結果を以下に示します。
 
 ![マイノリティ・ゲームの実行結果](fig/minority_game_result.png)
 

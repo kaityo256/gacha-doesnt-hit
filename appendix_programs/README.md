@@ -96,7 +96,6 @@ print(wins/games)
 
 チェンジ派のシミュレーションコード。
 
-
 ```py
 from random import choice
 games = 10000
@@ -181,7 +180,7 @@ print(f"一度も当たらなかった人の割合 {nohit / N:.2%}")
 
 ### 4.2 アイドルのイベント
 
-ポスターをコンプリートするのに平均何枚のCDを購入しなければならないかのシミュレーションコード。
+ポスターをコンプリートするのに平均何枚のCDを購入しなければならないかのシミュレーションコードです。
 
 ```py
 import random
@@ -199,7 +198,7 @@ for i in range(10000):
 print(total/10000)
 ```
 
-CDの購入数に対して、「もう一枚CDを購入した時に新しいポスターを獲得できる」確率をプロットするためのコード。
+CDの購入数に対して、「もう一枚CDを購入した時に新しいポスターを獲得できる」確率をプロットするためのコードです。
 
 ```py
 from matplotlib import pyplot as plt
@@ -216,3 +215,226 @@ plt.plot(x,y, marker='o')
 plt.show()
 ```
 
+## 5章 風邪はなぜ流行る？
+
+### 5.1 ゾンビパニック
+
+```py
+def zombie(r):
+    N = 10000
+    z = 100
+    N = N - z
+    z_total = 0
+    weeks = 0
+    for i in range(1000):
+        weeks += 1
+        z_total += z
+        z = int(z*r)
+        N = N - z
+        if N < 0:
+            N = 0
+        if z == 0 or N == 0:
+            break
+    return N, weeks
+
+for R in [0.5, 0.9, 1.0, 1.1, 2.0]:
+    N, weeks = zombie(R)
+    if N >0:
+        result = "生存エンド"
+    else:
+        result = "全滅エンド"
+    print(f"R= {R}, 生存者 {N:4d}人, 収束まで {weeks:2d}週, {result}")
+```
+
+### 5.2 都市の横断モデル
+
+
+```py
+import random
+from matplotlib import pyplot as plt
+
+def find(i, parent):
+    while i != parent[i]:
+        i = parent[i]
+    return i
+
+def union(i, j, parent):
+    i = find(i, parent)
+    j = find(j, parent)
+    parent[j] = i
+
+def make_conf(L, p):
+    parent = [i for i in range(L * L)]
+    for iy in range(L-1):
+        for ix in range(L-1):
+            i = ix + iy * L
+            j = ix+1 + iy * L
+            if random.random() < p:
+                union(i, j, parent)
+            j = ix + (iy+1) * L
+            if random.random() < p:
+                union(i, j, parent)
+    return parent
+
+def check_percolated(L, p):
+    N = L**2
+    parent = make_conf(L, p)
+    for i in range(L):
+        for j in range(N-L-1, N-1):
+            if find(i, parent) == find(j, parent):
+                return True
+    return False
+
+random.seed(1)
+trial = 100
+L = 32
+p_values = []
+percolation_probabilities = []
+for i in range(100):
+    p = i/100.0
+    count = 0
+    for j in range(trial):
+        if check_percolated(L, p):
+            count += 1
+    P = count / trial
+    p_values.append(p)
+    percolation_probabilities.append(P)
+plt.plot(p_values, percolation_probabilities, marker='o')
+plt.xlabel("Probability p")
+plt.ylabel("Percolation probability P")
+plt.show()
+```
+
+## 6章 渋滞はなぜ起きる？
+
+### 6.1 渋滞のシミュレーション
+
+与えられた反射神経パラメータにおいて最適速度模型の時空図を表示するコードです。反射神経パラメータを`a=1.0`とすると渋滞が発生しますが、`a=3.0`とすると渋滞は発生しません。
+
+```py
+from math import tanh
+from matplotlib import pyplot as plt
+import numpy as np
+
+def V(dx):
+    return tanh(dx -2.0) + tanh(2.0)
+
+def init(L, number_of_cars, car_positions, car_velocities):
+    dx = L / number_of_cars
+    x = 0.0
+    iv = V(dx)
+    for i in range(number_of_cars):
+        car_positions[i] = x
+        car_velocities[i] = iv
+        x += dx
+        x += np.random.uniform(-0.5, 0.5)
+
+def step(L, number_of_cars, car_positions, car_velocities, a, dt):
+    for i in range(number_of_cars):
+        dx = car_positions[(i + 1) % number_of_cars] - car_positions[i]
+        if (dx < 0.0):
+            dx += L
+        car_velocities[i] += a * (V(dx) - car_velocities[i])*dt
+        car_positions[i] += car_velocities[i]*dt
+        if (car_positions[i] > L):
+            car_positions[i] -= L
+
+def run(a):
+    T = 50000
+    L = 40
+    number_of_cars = 20
+    dt = 0.002
+    car_positions = np.zeros(number_of_cars)
+    car_velocities = np.zeros(number_of_cars)
+    init(L, number_of_cars, car_positions, car_velocities)
+    history = []
+    times = []
+    data_x = []
+    data_y = []
+    for i in range(T):
+        step(L, number_of_cars, car_positions, car_velocities, a, dt)
+        if (i%100==0):
+            data_x += car_positions.tolist()
+            data_y += [i*dt]*number_of_cars
+    plt.xlabel("position")
+    plt.ylabel("time")
+    plt.scatter(data_x, data_y, s=1.0, alpha=0.5,color="black")
+    plt.show()
+
+a = 1.0 # 反射神経パラメータ (a=1.0で渋滞相、a=3.0で自由流相)
+np.random.seed(1)
+run(a)
+```
+
+### 6.2 空いている店を選べ！
+
+マイノリティ・ゲームのシミュレーションコードです。なんどもゲームを繰り返し、各ターンにおいてプレイヤーが獲得した総得点を表示します。
+
+```py
+import numpy as np
+import matplotlib.pyplot as plt
+
+def history_to_index(history):
+    index = 0
+    for bit in history:
+        index = 2 * index + bit
+    return index
+
+def choose_strategies(strategy_scores, N):
+    chosen = []
+    for i in range(N):
+        max_score = np.max(strategy_scores[i])
+        candidates = np.where(strategy_scores[i] == max_score)[0]
+        chosen.append(np.random.choice(candidates))
+    return chosen
+
+def run_minority_game(N, T, L, S):
+    history_length=L
+    num_strategies_per_player=S
+    num_histories = 2 ** history_length
+    strategies = np.random.randint(0, 2,size=(N, num_strategies_per_player, num_histories))
+    strategy_scores = np.zeros((N, num_strategies_per_player),dtype=int)
+    history = list(np.random.randint(0, 2, size=history_length))
+    total_score_per_turn = []
+    for t in range(T):
+        h_index = history_to_index(history)
+        chosen_strategies = choose_strategies(strategy_scores, N)
+        choices = np.empty(N, dtype=int)
+        for i in range(N):
+            s = chosen_strategies[i]
+            choices[i] = strategies[i, s, h_index]
+
+        num_A = np.sum(choices == 0)
+        num_B = np.sum(choices == 1)
+        if num_A < num_B:
+            minority_choice = 0
+        else:
+            minority_choice = 1
+        winners = choices == minority_choice
+        total_score_per_turn.append(np.sum(winners))
+        for i in range(N):
+            for s in range(num_strategies_per_player):
+                prediction = strategies[i, s, h_index]
+                if prediction == minority_choice:
+                    strategy_scores[i, s] += 1
+
+        history.pop(0)
+        history.append(minority_choice)
+    return total_score_per_turn
+
+
+np.random.seed(1)
+N = 101 # プレイヤー数
+T = 100 # 総ターン数
+L = 5   # 履歴をどれくらい見るか
+S = 2   # プレイヤーに配る戦略数 
+total_score_per_turn = run_minority_game(N, T, L, S)
+# 時間発展をプロット
+plt.figure(figsize=(10, 5))
+plt.plot(total_score_per_turn)
+plt.ylim(bottom=0)
+plt.xlabel("Turn")
+plt.ylabel("Total score gained in this turn")
+plt.title("Total number of winners per turn")
+plt.show()
+```
