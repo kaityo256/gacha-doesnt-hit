@@ -63,8 +63,8 @@ def plot(start, end):
   logistic_plot(start, end, x, y)
   x = np.array(x)
   t = 1-1.0/x
-  plt.xlabel("Population")
   plt.xlabel("Growth parameter a")
+  plt.ylabel("Population")
   plt.scatter(x, y, s = 1, label="Simulated data")
   plt.plot(x, t, color = "black", label="Predicted curve")
   plt.legend()
@@ -356,8 +356,8 @@ def run(a):
         if (i%100==0):
             data_x += car_positions.tolist()
             data_y += [i*dt]*number_of_cars
-    plt.xlabel("position")
-    plt.ylabel("time")
+    plt.xlabel("Position")
+    plt.ylabel("Time")
     plt.scatter(data_x, data_y, s=1.0, alpha=0.5,color="black")
     plt.show()
 
@@ -368,7 +368,7 @@ run(a)
 
 ### 6.2 空いている店を選べ！
 
-マイノリティ・ゲームのシミュレーションコードです。なんどもゲームを繰り返し、各ターンにおいてプレイヤーが獲得した総得点を表示します。
+マイノリティ・ゲームのシミュレーションコードです。何度もゲームを繰り返し、各ターンにおいてプレイヤーが獲得した総得点を表示します。
 
 ```py
 import numpy as np
